@@ -22,15 +22,20 @@ with mp_hands.Hands(
         detected_image = hands.process(image)
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-        if detected_image.multi_hand_landmarks:
-            for eachlm in detected_image.multi_hand_landmarks:
-                mp_drawing.draw_landmarks(image, eachlm,
+        if detected_image.multi_hand_landmarks: # each hand
+            for hand in detected_image.multi_hand_landmarks: # for each landmarkqa
+                """mp_drawing.draw_landmarks(image, hand,
                                         mp_hands.HAND_CONNECTIONS,
                                         landmark_drawing_spec=mp.solutions.drawing_utils.DrawingSpec(
                                             color=(255, 0, 255), thickness=4, circle_radius=2),
                                         connection_drawing_spec=mp.solutions.drawing_utils.DrawingSpec(
-                                            color=(20, 180, 90), thickness=2, circle_radius=2)
-                                        )
+                                            color=(20, 180, 90), thickness=2, circle_radius=2))"""
+                for landmark in hand.landmark:
+                        print('point')
+                        h, w , _ =  image.shape
+                        x = int(landmark.x*w)
+                        y = int(landmark.y*h)
+                        cv2.circle(image,(x,y), 5,(0,255,0),-1)
 
         cv2.imshow('Webcam', image)
   
