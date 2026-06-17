@@ -3,10 +3,10 @@ import torch
 from torchvision.transforms import ToTensor, Lambda
 from torch.utils.data import Dataset
 from torch import nn
+import pandas as pd
 
-
-
-
+data =pd.read_csv("data\mock_gesture_data.csv")
+print(data)
 device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
 print(device)
 learning_rate = 1e-3
@@ -14,7 +14,7 @@ batch_size = 64
 
 class HandsLandmarkDataset(Dataset):
     def __init__(self):
-        pass
+        self.labels = data
     def __getitem__(self):
         pass
     def __len__(self):
