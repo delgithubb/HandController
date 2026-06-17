@@ -19,16 +19,8 @@ class HandsLandmarkDataset(Dataset):
         self.labels = [self.classes.index(l) for l in df[0].values]  # names → numbers
         self.features = df.iloc[:, 1:].values     #all samples, each row is a captures frame for wcam
 
-
-    def normalise(self,landmarks):
-        landmarks= landmarks.reshape(21,3)
-        wrist = landmarks[0]
-        landmarks=landmarks-wrist
-        return landmarks.flatten()
-
     def __getitem__(self, idx):
-        features =self.normalise(self.features[idx])
-        x = torch.tensor(features, dtype=torch.float32)
+        x = torch.tensor(self.features[idx], dtype=torch.float32)
         y = torch.tensor(self.labels[idx], dtype=torch.long)
         return x, y
 
