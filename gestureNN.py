@@ -1,46 +1,61 @@
 
 import torch
 from torchvision.transforms import ToTensor, Lambda
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from torch import nn
 import pandas as pd
 
-data =pd.read_csv("data\mock_gesture_data.csv")
-print(data)
+datapath = ("data\mock_gesture_data.csv")
 device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
 print(device)
 learning_rate = 1e-3
 batch_size = 64
+num_gestures =0
 
 class HandsLandmarkDataset(Dataset):
-    def __init__(self):
-        self.labels = data
-    def __getitem__(self):
-        pass
+    def __init__(self,datapth):
+        df = pd.read_csv(datapth, header=None)
+        self.classes = list(set(df[0].values))          # unique gesture names
+        self.labels = [self.classes.index(l) for l in df[0].values]  # names → numbers
+        self.features = df.iloc[:, 1:].values     #all samples, each row is a captures frame for wcam
+
+
+    def normalise(self,landmarks):
+        landmarks= landmarks.reshape(21,3)
+        wrist = landmarks[0]
+        landmarks=landmarks-wrist
+        return landmarks.flatten()
+
+    def __getitem__(self, idx):
+        features =self.normalise(self.features[idx])
+        x = torch.tensor(features, dtype=torch.float32)
+        y = torch.tensor(self.labels[idx], dtype=torch.long)
+        return x, y
+
     def __len__(self):
-        pass
+        return len(self.labels)
     
-
-
-
-
-
 
 class NeuralNet(nn.Module):
     def __init__(self):
         super().__init__()
         self.flatten = nn.Flatten()
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(28*28, 44),
-            nn.ReLU(),
-            nn.Linear(44,512),
-            nn.ReLU(),
-            nn.Linear(512,10) # neural network stack, layer 1 28*28 neurons, level 2 44 neurons level 3 512 neurons level 4 10 neuros as there are 10 classifications
-        )
+        nn.Linear(63, 128),
+        nn.ReLU(),
+         nn.Dropout(0.3),      # randomly drop 30% of neurons during training
+        nn.Linear(128, 64),
+        nn.ReLU(),
+        nn.Dropout(0.3),
+        nn.Linear(64, num_gestures))
     def forward(self,x):
         x = self.flatten(x)
         logits = self.linear_relu_stack(x)
         return logits
+
+
+dataset = HandsLandmarkDataset(datapath)
+loader = DataLoader(dataset, batch_size=32, shuffle=True)
 
 model = NeuralNet().to(device)
 
@@ -85,9 +100,9 @@ def test_loop(dataloader,model,loss_fn):
 
 
 loss_fn = nn.CrossEntropyLoss() # loss functin is the mean of the square differences
-optimiser =torch.optim.SGD(model.parameters(),lr =learning_rate) #use stoic GD to minimize loss
+optimiser =torch.optim.Adam(model.parameters(),lr =learning_rate) #use stoic GD to minimize loss
 epochs =100 #loop through data set 10 times
 for test in range(epochs):
     print(f"Epoch {test + 1}\n-------------------------------")
-    train_loop(train_dl, model, loss_fn, optimiser)
-    test_loop(test_dl, model, loss_fn)
+    train_loop(loader, model, loss_fn, optimiser)
+    test_loop(loader, model, loss_fn)
