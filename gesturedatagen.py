@@ -14,7 +14,9 @@ mp_drawing = mp.solutions.drawing_utils
 datapath = ("data\mock_gesture_data.csv")
 saverowqueue = queue.Queue()
 
-capture = cv2.VideoCapture(1)
+capture = cv2.VideoCapture(0)
+capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 key_map = {
     ord('1'): 'point',
     ord('2'): 'point_up',
@@ -88,7 +90,7 @@ with mp_hands.Hands(
 
         while capture.isOpened():
             ret, frame = capture.read()
-            frame = cv2.flip(frame, 1)
+            frame = cv2.flip(frame, 1)  
             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             
             detected_image = hands.process(image)

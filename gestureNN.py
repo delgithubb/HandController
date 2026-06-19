@@ -1,6 +1,4 @@
-
 import torch
-from torchvision.transforms import ToTensor, Lambda
 from torch.utils.data import Dataset, DataLoader
 from torch import nn
 import pandas as pd
@@ -10,7 +8,7 @@ device = torch.accelerator.current_accelerator().type if torch.accelerator.is_av
 print(device)
 learning_rate = 1e-3
 batch_size = 64
-num_gestures =0
+num_gestures =9
 
 class HandsLandmarkDataset(Dataset):
     def __init__(self,datapth):
